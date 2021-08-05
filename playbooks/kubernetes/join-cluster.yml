@@ -1,0 +1,17 @@
+- name: Get Join Command
+  hosts: '{{MASTER}}'
+  tasks:
+    - name: Run kubeadm command to get join command
+      shell: kubeadm token create --print-join-command
+      register: joiningCommand
+
+    - name: Save Command to Placeholder
+      add_host:
+        name: "K8S_PLACE_HOLDER"
+        joinCommand: "{{joiningCommand.stdout}}"
+
+- name: Join Kubenetes Cluster
+  hosts: '{{WORKER}}'
+  tasks:
+    - name: Run Join Command
+      shell: "{{hostvars['K8S_PLACE_HOLDER']['joinCommand']}}"

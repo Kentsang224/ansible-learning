@@ -1,0 +1,13 @@
+- import_playbook: containerd-installation.yml
+  vars:
+    HOST: workerNodes
+
+- import_playbook: kube-package-installation.yml
+  vars:
+    HOST: workerNodes
+    VERSION: 1.21.3-00
+
+- import_playbook: join-cluster.yml
+  vars:
+    MASTER: '{{groups["masterNode"][0]}}'
+    WORKER: workerNodes

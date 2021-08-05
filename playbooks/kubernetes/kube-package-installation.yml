@@ -1,0 +1,21 @@
+- name: Installation of Kubernetes
+  hosts: '{{HOST}}'
+  tasks:
+    - name: Get Google's Apt repository gpg key
+      apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+
+    - name: Add Kubernetes apt repository
+      apt_repository: 
+        repo: "deb https://apt.kubernetes.io/ kubernetes-xenial main"
+        update_cache: yes
+
+    - name: Download Kubernetes Packages
+      apt:
+        name: 
+          - kubelet={{VERSION}}
+          - kubeadm={{VERSION}}
+          - kubectl={{VERSION}}
+
+    - name: Enable Service on startup
+      shell: systemctl enable kubelet.service && systemctl enable containerd.service

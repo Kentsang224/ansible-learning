@@ -1,0 +1,12 @@
+- name: CNI Plugin Setup
+  hosts: '{{HOST}}'
+  tasks:
+    - name: Get Calico Yaml
+      get_url: 
+        url: https://docs.projectcalico.org/manifests/calico.yaml
+        dest: '/home/ubuntu/'
+
+    - name: Apply Calico
+      shell: kubectl apply -f calico.yaml
+      environment: 
+        KUBECONFIG: /home/ubuntu/.kube/config

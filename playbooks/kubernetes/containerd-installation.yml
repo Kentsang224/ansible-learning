@@ -1,0 +1,52 @@
+- name: Installation of containerd
+  hosts: '{{HOST}}'
+  tasks:
+    - name: Load overlay
+      command: modprobe overlay
+
+    - name: Load netfilter
+      command: modprobe br_netfilter
+
+    - name: Configure Modules to be loaded on boot
+      copy:
+        dest: /etc/modules-load.d/containerd.conf
+        content: |
+          overlay
+          br_netfilter
+
+    - name: Configure Network Parameter
+      copy:
+        dest: /etc/sysctl.d/99-kubernetes-cri.conf
+        content: |
+          net.bridge.bridge-nf-call-iptables  = 1
+          net.ipv4.ip_forward                 = 1
+          net.bridge.bridge-nf-call-ip6tables = 1
+
+    - name: Reload System Entries
+      command: sysctl --system
+
+    - name: Install Containerd
+      apt:
+        name: containerd
+        update_cache: yes
+        state: latest
+
+    - name: Create Containerd Folder
+      file:
+        path: '/etc/containerd'
+        state: directory
+
+    - name: Create Default Containerd Configuration
+      shell:
+        "containerd config default | tee /etc/containerd/config.toml"
+
+    - name: Modify Containerd to use Systemd Cgroup driver
+      replace:
+        path: /etc/containerd/config.toml
+        regexp: 'SystemdCgroup = false'
+        replace: 'SystemdCgroup = true'
+
+    - name: Restart Containerd
+      service:
+        name: containerd
+        state: restarted

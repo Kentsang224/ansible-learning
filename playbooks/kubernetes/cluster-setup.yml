@@ -1,0 +1,42 @@
+- name: Cluster Setup
+  hosts: '{{HOST}}'
+  tasks:
+    - name: Get Default Cluster Config
+      shell: kubeadm config print init-defaults | tee cluster-initial-config.yaml
+    
+    - name: Modify Cluster API Server End Point
+      replace:
+        path: cluster-initial-config.yaml
+        regexp: 'advertiseAddress: 1.2.3.4'
+        replace: 'advertiseAddress: {{ API_SERVER_IP }}'
+
+    - name: Change Cluster CRI Socket
+      replace:
+        path: cluster-initial-config.yaml
+        regexp: 'criSocket: /var/run/dockershim.sock'
+        replace: 'criSocket: /run/containerd/containerd.sock'
+
+    - name: Configure Kubelet to use systemd
+      blockinfile:
+        dest: cluster-initial-config.yaml
+        content: |
+          ---
+          apiVersion: kubelet.config.k8s.io/v1beta1
+          kind: KubeletConfiguration
+          cgroupDriver: systemd
+
+    - name: Initialize the master node
+      shell: kubeadm init --config=cluster-initial-config.yaml --cri-socket /run/containerd/containerd.sock
+
+    - name: Create Kube Folder
+      file:
+        path: /home/ubuntu/.kube
+        state: directory
+
+    - name: Copy Cluster Admin to Context
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /home/ubuntu/.kube/config
+        owner: ubuntu
+        group: ubuntu
+        remote_src: yes

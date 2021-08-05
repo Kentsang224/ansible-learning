@@ -1,0 +1,17 @@
+- import_playbook: containerd-installation.yml
+  vars:
+    HOST: '{{groups["masterNode"][0]}}'
+
+- import_playbook: kube-package-installation.yml
+  vars:
+    HOST: '{{groups["masterNode"][0]}}'
+    VERSION: 1.21.3-00
+
+- import_playbook: cluster-setup.yml
+  vars:
+    HOST: '{{groups["masterNode"][0]}}'
+    API_SERVER_IP: '{{groups["masterNode"][0]}}'
+
+- import_playbook: cni-setup.yml
+  vars:
+    HOST: '{{groups["masterNode"][0]}}'
